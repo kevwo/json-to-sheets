@@ -11,15 +11,15 @@ class GoogleSheetDAL:
     All other rows are data
     """
 
-    def __init__(self, key_file, spreadsheet_id, worksheet_name=None):
-        self.google_client = self.get_google_client(key_file)
+    def __init__(self, key_json, spreadsheet_id, worksheet_name=None):
+        self.google_client = self.get_google_client(key_json)
         self.spreadsheet = self.get_spreadsheet(self.google_client, spreadsheet_id)
         self.data_worksheet = self.get_data_worksheet(self.spreadsheet, worksheet_name)
 
     @staticmethod
-    def get_google_client(key_file):
+    def get_google_client(key_json):
         scope = ['https://www.googleapis.com/auth/drive']
-        credentials = ServiceAccountCredentials.from_json_keyfile_name(key_file, scope)
+        credentials = ServiceAccountCredentials.from_json_keyfile_dict(key_json, scope)
         gc = gspread.authorize(credentials)
         return gc
 
@@ -101,11 +101,18 @@ class GoogleSheetDAL:
         self.data_worksheet.update_cells(new_row)
 
 
-def main(keyfile, spreadsheet_id, worksheet_name, data_file):
+def upload_json_to_sheet(data_file, spreadsheet_id, worksheet_name=None, keyfile=None, keyjson=None):
     """
     Parses json file then stores the data in google sheet
     :return: Nothing
     """
+
+    google_key_json = None
+    if keyjson is not None:
+        google_key_json = keyjson
+    else:
+        with open(keyfile) as fin:
+            google_key_json = json.load(fin)
 
     with open(data_file) as fin:
         data = json.load(fin)
@@ -118,20 +125,22 @@ def main(keyfile, spreadsheet_id, worksheet_name, data_file):
             data[new_key] = data[key]
             data.pop(key)
 
-    dal = GoogleSheetDAL(keyfile, spreadsheet_id, worksheet_name)
+    dal = GoogleSheetDAL(google_key_json, spreadsheet_id, worksheet_name)
 
     dal.append_data(data)
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Upload json data to google sheets")
-    parser.add_argument('--keyfile', type=str, help="keyfile used for google APIs. See readme for more info", required=True)
+    google_api_group = parser.add_mutually_exclusive_group(required=True)
+    google_api_group.add_argument('--keyfile', type=str, help="keyfile used for google APIs. See readme for more info")
+    google_api_group.add_argument('--keyjson', type=str, help="JSON string representing the keyfile")
     parser.add_argument('--spreadsheetid', type=str, help="Spreadsheet Id to upload data. See readme for more info", required=True)
     parser.add_argument('--worksheetname', type=str, help="Worksheet name (optional). Defaults to first worksheet if empty", required=False)
     parser.add_argument('--datafile', type=str, help="JSON serialized file to upload. This must include a 'Date' field", required=True)
 
     args = parser.parse_args()
 
-    main(args.keyfile, args.spreadsheetid, args.worksheetname, args.datafile)
+    upload_json_to_sheet(args.datafile, args.spreadsheetid, worksheet_name=args.worksheetname, keyfile=args.keyfile, keyjson=args.keyjson)
 
 
