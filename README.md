@@ -1,9 +1,9 @@
 # json-to-sheets
 
 ## Example Usage
-python json-to-sheet.py -h
+`python json-to-sheet.py -h`
 
-python json-to-sheet.py --google-api-keyfile "~/myfolder/samplekeyfile-718f3c7be068.json.txt" --spreadsheet-id "1G7gWOyq1OPzsxUiF11eEf8CPxe6vzaUR8FbSYmvz-P8" --worksheet-name "Data" --data-file "~/data/myfile.json"
+`python json-to-sheet.py --keyfile "~/myfolder/samplekeyfile-718f3c7be068.json.txt" --spreadsheetid "1G7gWOyq1OPzsxUiF11eEf8CPxe6vzaUR8FbSYmvz-P8" --worksheetname "Data" --datafile "~/data/myfile.json"`
 
 
 ## Requirements
